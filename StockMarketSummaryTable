@@ -1,0 +1,111 @@
+Sub StockSummaryTable()
+
+    'Loop through each worksheet, remember to use ws. since we need to run this in every sheet at once
+    For Each ws In Worksheets
+    
+        'Define and give value to variables, for ticker and total volume refer to credit card activity if needed
+        'Do one or two parts(at most) at once, then come back to top to add variables for the next part of the problem
+        'Variables for ticker symbol and volume total
+        Dim Ticker As String
+        Dim SummaryTableRow As Integer
+        Dim VolumeTotal As Double
+        Dim YearlyChange As Double
+        Dim PercentChange As Double
+        
+        VolumeTotal = 0
+        SummaryTableRow = 2
+        
+        'Variables for percent change and yearly change. Take into account if a stock opens or closes at 0 in a given year, may need nested If for this and the conditional formatting
+        'Dim YearlyChange As Double (when ran, said this was a duplicate, commented it out and script worked)
+        'Dim PercentChange As Double (when ran, said this was a duplicate, commented it out and script worked)
+        Dim YearOpenPrice As Double
+        Dim YearClosePrice As Double
+        
+        'Set YearOpenPrice outside of For loop just like SummaryTableRow, change value of YearOpenPrice in If statement in the For loop
+        'YearClosePrice will be found with the last value of stock volume in the loop
+        YearOpenPrice = ws.Cells(2, 3).Value
+        
+        
+        'Create headers for summary table in every worksheet
+        ws.Cells(1, 9).Value = "Ticker"
+        ws.Cells(1, 10).Value = "Yearly Change"
+        ws.Cells(1, 11).Value = "Percent Change"
+        ws.Cells(1, 12).Value = "Total Stock Volume"
+        
+        'Lots of data, use something to find last row instead of hard coding it
+        LastRow = ws.Cells(Rows.Count, 1).End(xlUp).Row
+            
+            'loop through all rows to last row
+            For i = 2 To LastRow
+            
+                'Check if next row is for different ticker/company
+                If ws.Cells(i + 1, 1).Value <> ws.Cells(i, 1).Value Then
+                
+                    'Find YearClosePrice, calculate YearlyChange
+                    YearClosePrice = ws.Cells(i, 6).Value
+                    YearlyChange = YearClosePrice - YearOpenPrice
+                
+                    'If the next row is different
+                    Ticker = ws.Cells(i, 1).Value
+                    
+                    'Add YearlyChange to summary table
+                    ws.Range("J" & SummaryTableRow).Value = YearlyChange
+                    
+                    'Calculate volume total for the stock
+                    VolumeTotal = VolumeTotal + ws.Cells(i, 7).Value
+                    
+                    'Grab ticker symbol, enter in summary table
+                    ws.Range("I" & SummaryTableRow).Value = Ticker
+                    
+                    'Grab volume total, enter in summary table
+                    ws.Range("L" & SummaryTableRow).Value = VolumeTotal
+                    
+                    'Conditonal formatting for YearlyChange
+                    If YearlyChange > 0 Then
+                        'green
+                        ws.Range("J" & SummaryTableRow).Interior.ColorIndex = 4
+                    ElseIf YearlyChange < 0 Then
+                        'red
+                        ws.Range("J" & SummaryTableRow).Interior.ColorIndex = 3
+                    End If
+                    
+                    'Can't divide by zero to get PercentChange, need a condition to fix this
+                    If YearOpenPrice <> 0 Then
+                        PercentChange = YearlyChange / YearOpenPrice
+                    Else
+                        PercentChange = 0
+                    End If
+                    
+                    'Enter PercentChange into summary table, format to show as a percent
+                    ws.Range("K" & SummaryTableRow).Value = PercentChange
+                    ws.Range("K" & SummaryTableRow).NumberFormat = "0.00%"
+                    
+                    'Conditonal formatting for PercentChange
+                    If YearlyChange > 0 Then
+                        'green
+                        ws.Range("K" & SummaryTableRow).Interior.ColorIndex = 4
+                    ElseIf YearlyChange < 0 Then
+                        'red
+                        ws.Range("K" & SummaryTableRow).Interior.ColorIndex = 3
+                    End If
+                        
+                    'Add a row to SummaryTableRow to get ready to add the next stock
+                    SummaryTableRow = SummaryTableRow + 1
+                    
+                    'Change YearOpenPrice for nex ticker/company
+                    YearOpenPrice = ws.Cells(i + 1, 3).Value
+                    
+                    'VolumeTotal needs to be set to zero for next stock
+                    VolumeTotal = 0
+                    
+                'If the next row is the same stock, add to VolumeTotal
+                Else
+                    VolumeTotal = VolumeTotal + ws.Cells(i, 7).Value
+                                               
+                End If
+            Next i
+    Next ws
+
+End Sub
+
+
